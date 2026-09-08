@@ -255,6 +255,30 @@ def solve_code_query(query):
             "code": "def generate_fibonacci(n):\n    \"\"\"முதல் n Fibonacci எண்களை உருவாக்குகிறது\"\"\"\n    sequence = [0, 1]\n    while len(sequence) < n:\n        next_val = sequence[-1] + sequence[-2]\n        sequence.append(next_val)\n    return sequence[:n]\n\n# முதல் 10 எண்கள்:\nprint(generate_fibonacci(10))\n# Output: [0, 1, 1, 2, 3, 5, 8, 13, 21, 34]",
             "explanation": "Fibonacci வரிசையில் ஒவ்வொரு எண்ணும் அதற்கு முந்தைய இரண்டு எண்களின் கூட்டுத்தொகையாகும் (0, 1, 0+1=1, 1+1=2, 1+2=3, ...)."
         },
+<<<<<<< HEAD
+=======
+        "python_binary_search": {
+            "triggers": ["binary search", "binary search python", "binary search code"],
+            "lang": "python",
+            "title": "Python-ல் இருமத் தேடல் (Binary Search Algorithm - O(log n))",
+            "code": "def binary_search(arr, target):\n    \"\"\"வரிசைப்படுத்தப்பட்ட பட்டியலில் O(log n) நேரத்தில் தேடுகிறது\"\"\"\n    low = 0\n    high = len(arr) - 1\n    \n    while low <= high:\n        mid = (low + high) // 2\n        if arr[mid] == target:\n            return mid  # எண் கண்டறியப்பட்ட இடம் (Index)\n        elif arr[mid] < target:\n            low = mid + 1\n        else:\n            high = mid - 1\n            \n    return -1  # எண் கிடைக்கவில்லை\n\nnumbers = [2, 5, 8, 12, 16, 23, 38, 56, 72, 91]\nidx = binary_search(numbers, 23)\nprint(f\"இலக்கு எண் 23 உள்ள இடம்: {idx}\") # Output: 5",
+            "explanation": "Binary Search அல்காரிதம் வரிசைப்படுத்தப்பட்ட பட்டியலை பாதியாகப் பிரித்து தேடுகிறது. இதன் நேரச் சிக்கல் O(log n) என்பதால் மில்லியன் கணக்கான உருப்படிகளையும் நொடியில் தேடும்."
+        },
+        "python_ohms_law_sim": {
+            "triggers": ["ohms law code", "ohm's law python", "circuit simulation python", "electronics python"],
+            "lang": "python",
+            "title": "Python-ல் ஓம் விதி மற்றும் மின்சுற்று கணக்கீடு (Ohm's Law Simulator)",
+            "code": "def ohms_law(voltage=None, current=None, resistance=None):\n    \"\"\"Ohm's Law Solver: V = I * R, P = V * I\"\"\"\n    if voltage is not None and current is not None:\n        r = voltage / current\n        p = voltage * current\n        return {\"Resistance (Ω)\": round(r, 2), \"Power (W)\": round(p, 2)}\n    elif current is not None and resistance is not None:\n        v = current * resistance\n        p = (current ** 2) * resistance\n        return {\"Voltage (V)\": round(v, 2), \"Power (W)\": round(p, 2)}\n    elif voltage is not None and resistance is not None:\n        i = voltage / resistance\n        p = (voltage ** 2) / resistance\n        return {\"Current (A)\": round(i, 4), \"Power (W)\": round(p, 2)}\n\n# 12V பேட்டரியில் 4 Ohm மின்தடை இணைத்தால்:\nresult = ohms_law(voltage=12, resistance=4)\nprint(\"மின்சுற்று முடிவு:\", result)\n# Output: {'Current (A)': 3.0, 'Power (W)': 36.0}",
+            "explanation": "இந்த பொறியியல் நிரல் ஓம் விதியின்படி V, I, R மற்றும் திறனை (Power P = V*I) தானாக கணக்கிடுகிறது."
+        },
+        "python_two_sum": {
+            "triggers": ["two sum", "two sum python", "two sum leetcode"],
+            "lang": "python",
+            "title": "Two Sum அல்காரிதம் (LeetCode #1 - O(n) Hash Map தீர்வு)",
+            "code": "def two_sum(nums, target):\n    \"\"\"O(n) நேரச் சிக்கலில் இலக்கு கூட்டுத்தொகை தரும் இரண்டு எண்களின் இடங்களை கண்டறிதல்\"\"\"\n    seen = {}\n    for i, num in enumerate(nums):\n        diff = target - num\n        if diff in seen:\n            return [seen[diff], i]\n        seen[num] = i\n    return []\n\n# சோதனை:\nprint(two_sum([2, 7, 11, 15], 9))  # Output: [0, 1]",
+            "explanation": "Hash Map (Dictionary) பயன்படுத்தி முன்பார்த்த எண்களை சேமித்து வைப்பதால், O(n²) நேரத்திற்குப் பதிலாக வெறும் O(n) நேரத்தில் தீர்வு கிடைக்கிறது."
+        },
+>>>>>>> 13b8654 (feat(v2.0): Vernacular AI with Engineering NEC Symbols Studio, Study Themes, Live Circuit Simulators & Cinema Dubbing)
         "javascript_filter": {
             "triggers": ["javascript array filter", "js filter array", "array filter js", "filter in javascript"],
             "lang": "javascript",
