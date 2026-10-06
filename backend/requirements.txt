@@ -1,12 +1,5 @@
-<<<<<<< HEAD
-Flask
-flask-cors
-python-dotenv
-deep-translator
-=======
 fastapi==0.115.6
 uvicorn[standard]==0.34.0
 pydantic==2.10.4
 requests==2.32.3
 deep-translator>=1.11.4
->>>>>>> 13b8654 (feat(v2.0): Vernacular AI with Engineering NEC Symbols Studio, Study Themes, Live Circuit Simulators & Cinema Dubbing)

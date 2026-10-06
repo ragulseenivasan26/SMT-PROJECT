@@ -255,8 +255,6 @@ def solve_code_query(query):
             "code": "def generate_fibonacci(n):\n    \"\"\"முதல் n Fibonacci எண்களை உருவாக்குகிறது\"\"\"\n    sequence = [0, 1]\n    while len(sequence) < n:\n        next_val = sequence[-1] + sequence[-2]\n        sequence.append(next_val)\n    return sequence[:n]\n\n# முதல் 10 எண்கள்:\nprint(generate_fibonacci(10))\n# Output: [0, 1, 1, 2, 3, 5, 8, 13, 21, 34]",
             "explanation": "Fibonacci வரிசையில் ஒவ்வொரு எண்ணும் அதற்கு முந்தைய இரண்டு எண்களின் கூட்டுத்தொகையாகும் (0, 1, 0+1=1, 1+1=2, 1+2=3, ...)."
         },
-<<<<<<< HEAD
-=======
         "python_binary_search": {
             "triggers": ["binary search", "binary search python", "binary search code"],
             "lang": "python",
@@ -278,7 +276,6 @@ def solve_code_query(query):
             "code": "def two_sum(nums, target):\n    \"\"\"O(n) நேரச் சிக்கலில் இலக்கு கூட்டுத்தொகை தரும் இரண்டு எண்களின் இடங்களை கண்டறிதல்\"\"\"\n    seen = {}\n    for i, num in enumerate(nums):\n        diff = target - num\n        if diff in seen:\n            return [seen[diff], i]\n        seen[num] = i\n    return []\n\n# சோதனை:\nprint(two_sum([2, 7, 11, 15], 9))  # Output: [0, 1]",
             "explanation": "Hash Map (Dictionary) பயன்படுத்தி முன்பார்த்த எண்களை சேமித்து வைப்பதால், O(n²) நேரத்திற்குப் பதிலாக வெறும் O(n) நேரத்தில் தீர்வு கிடைக்கிறது."
         },
->>>>>>> 13b8654 (feat(v2.0): Vernacular AI with Engineering NEC Symbols Studio, Study Themes, Live Circuit Simulators & Cinema Dubbing)
         "javascript_filter": {
             "triggers": ["javascript array filter", "js filter array", "array filter js", "filter in javascript"],
             "lang": "javascript",
