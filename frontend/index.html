@@ -167,19 +167,71 @@ body {
   opacity: 0.85;
 }
 
+/* Animated Aurora Nebula Ambient Mesh */
 .ambient-glow {
   position: fixed;
-  width: 600px;
-  height: 600px;
   border-radius: 50%;
-  filter: blur(140px);
+  filter: blur(130px);
   z-index: 0;
   pointer-events: none;
-  opacity: 0.15;
+  opacity: 0.22;
+  will-change: transform, opacity;
 }
-.glow-1 { top: -100px; left: -100px; background: #4f46e5; }
-.glow-2 { bottom: -100px; right: -100px; background: #06b6d4; }
-.glow-3 { top: 40%; right: 20%; background: #a855f7; opacity: 0.1; }
+.glow-1 {
+  width: 720px;
+  height: 720px;
+  top: -160px;
+  left: -160px;
+  background: radial-gradient(circle, var(--primary) 0%, transparent 68%);
+  animation: auroraFloat1 24s ease-in-out infinite alternate;
+}
+.glow-2 {
+  width: 680px;
+  height: 680px;
+  bottom: -160px;
+  right: -160px;
+  background: radial-gradient(circle, var(--accent-cyan) 0%, transparent 68%);
+  animation: auroraFloat2 28s ease-in-out infinite alternate;
+}
+.glow-3 {
+  width: 580px;
+  height: 580px;
+  top: 35%;
+  right: 15%;
+  background: radial-gradient(circle, #8b5cf6 0%, transparent 68%);
+  opacity: 0.16;
+  animation: auroraFloat3 20s ease-in-out infinite alternate;
+}
+.glow-4 {
+  width: 540px;
+  height: 540px;
+  bottom: 15%;
+  left: 10%;
+  background: radial-gradient(circle, var(--accent-emerald) 0%, transparent 68%);
+  opacity: 0.14;
+  animation: auroraFloat4 32s ease-in-out infinite alternate;
+}
+
+@keyframes auroraFloat1 {
+  0% { transform: translate(0, 0) scale(1); }
+  50% { transform: translate(140px, 90px) scale(1.15); }
+  100% { transform: translate(-80px, 160px) scale(0.95); }
+}
+@keyframes auroraFloat2 {
+  0% { transform: translate(0, 0) scale(1); }
+  50% { transform: translate(-150px, -100px) scale(1.2); }
+  100% { transform: translate(90px, -130px) scale(0.9); }
+}
+@keyframes auroraFloat3 {
+  0% { transform: translate(0, 0) scale(1) rotate(0deg); }
+  50% { transform: translate(-110px, 120px) scale(1.12) rotate(45deg); }
+  100% { transform: translate(100px, -80px) scale(1) rotate(-30deg); }
+}
+@keyframes auroraFloat4 {
+  0% { transform: translate(0, 0) scale(0.9); }
+  50% { transform: translate(140px, -110px) scale(1.18); }
+  100% { transform: translate(-90px, 70px) scale(1); }
+}
 
 /* Sticky Header with Navigation */
 header {
@@ -860,6 +912,7 @@ footer.global-footer {
 <div class="ambient-glow glow-1"></div>
 <div class="ambient-glow glow-2"></div>
 <div class="ambient-glow glow-3"></div>
+<div class="ambient-glow glow-4"></div>
 
 <!-- Top Navigation & Brand Header -->
 <header>
@@ -1897,17 +1950,38 @@ function playTimerChime() {
   } catch (e) {}
 }
 
-// Background Canvas Rendering Engine
+// Background Canvas Rendering Engine (Interactive Constellation & Field Matrix)
 const canvas = document.getElementById('vernacularCanvas');
 const ctx = canvas.getContext('2d');
 let particles = [];
+let cadPulses = [];
 
 const THEME_GLYPHS = {
-  'study-academy': ['∫', '∑', '∇', 'eⁱᵖ+1=0', 'V=IR', 'E=mc²', 'f₀=1/2π√LC', 'λ=h/p', 'ΔxΔp≥ℏ/2', 'P=VI', 'Ω', 'μ', 'π', 'θ', 'ℏ', 'dB'],
-  'blueprint-cad': ['+', '⊕', '⊞', '⟂', '∠', 'R₁', 'C₂', 'GND', '12V', '230V', '50Hz', '10kΩ', '4.7μF', 'IC741', 'MCB'],
-  'cyber-neon': ['அ', 'ஆ', 'க', 'த', 'க', 'க', 'ಕ', 'అ', 'ॐ', 'ব', 'म', 'ਵ', 'A', 'Ω', '文', 'த', 'வ'],
-  'cozy-library': ['📖', '✏️', '✦', '·', '•', 'α', 'β', 'γ', 'δ', 'λ', 'φ', 'ψ', '§']
+  'study-academy': ['∫ f(x)dx', '∑ aₙ', '∇·B=0', 'eⁱᵖ+1=0', 'V=IR', 'E=mc²', 'f₀=1/2π√LC', 'λ=h/p', 'ΔxΔp≥ℏ/2', 'P=VI', 'Ω', 'μH', 'π', 'θ', 'ℏ', 'dB', '∂ψ/∂t'],
+  'blueprint-cad': ['+', '⊕', '⊞', '⟂', '∠', 'R₁:10k', 'C₂:1μF', 'GND', '12V DC', '230V AC', '50Hz', 'IC741', 'MCB 16A', 'Y=A·B', 'Z₀=50Ω'],
+  'cyber-neon': ['அ', 'ஆ', 'க', 'த', 'க', 'க', 'ಕ', 'అ', 'ॐ', 'ব', 'म', 'ਵ', 'A', 'Ω', '文', 'த', 'வ', 'தமிழன்', 'நெறி'],
+  'cozy-library': ['📖', '✏️', '✦', '·', '•', 'α', 'β', 'γ', 'δ', 'λ', 'φ', 'ψ', '§', '¶', '❦']
 };
+
+const mouse = { x: -1000, y: -1000, active: false, radius: 160 };
+window.addEventListener('mousemove', (e) => {
+  mouse.x = e.clientX;
+  mouse.y = e.clientY;
+  mouse.active = true;
+});
+window.addEventListener('mouseleave', () => {
+  mouse.active = false;
+});
+window.addEventListener('touchmove', (e) => {
+  if (e.touches && e.touches[0]) {
+    mouse.x = e.touches[0].clientX;
+    mouse.y = e.touches[0].clientY;
+    mouse.active = true;
+  }
+});
+window.addEventListener('touchend', () => {
+  mouse.active = false;
+});
 
 function resizeCanvas() {
   canvas.width = window.innerWidth;
@@ -1927,23 +2001,36 @@ class StudyParticle {
     this.vy = (Math.random() - 0.5) * 0.45;
     const pool = THEME_GLYPHS[activeStudyTheme] || THEME_GLYPHS['study-academy'];
     this.glyph = pool[Math.floor(Math.random() * pool.length)];
-    this.size = Math.random() * 16 + (this.glyph.length > 3 ? 11 : 14);
-    this.opacity = Math.random() * 0.24 + 0.08;
+    this.size = Math.random() * 14 + (this.glyph.length > 4 ? 11 : 13);
+    this.opacity = Math.random() * 0.28 + 0.12;
     
     if (activeStudyTheme === 'blueprint-cad') {
       this.color = '#00e5ff';
     } else if (activeStudyTheme === 'study-academy') {
-      this.color = Math.random() > 0.5 ? '#f59e0b' : '#38bdf8';
+      this.color = Math.random() > 0.4 ? '#f59e0b' : '#38bdf8';
     } else if (activeStudyTheme === 'cozy-library') {
       this.color = '#fbd38d';
     } else {
-      this.color = Math.random() > 0.5 ? '#818cf8' : '#38bdf8';
+      this.color = Math.random() > 0.5 ? '#a855f7' : '#06b6d4';
     }
   }
   update() {
     this.x += this.vx;
     this.y += this.vy;
-    if (this.x < -60 || this.x > canvas.width + 60 || this.y < -40 || this.y > canvas.height + 40) {
+
+    // Interactive mouse field ripple
+    if (mouse.active) {
+      const dx = mouse.x - this.x;
+      const dy = mouse.y - this.y;
+      const dist = Math.sqrt(dx * dx + dy * dy);
+      if (dist < mouse.radius) {
+        const force = (1 - dist / mouse.radius) * 1.6;
+        this.x -= (dx / dist) * force * 1.8;
+        this.y -= (dy / dist) * force * 1.8;
+      }
+    }
+
+    if (this.x < -80 || this.x > canvas.width + 80 || this.y < -40 || this.y > canvas.height + 40) {
       this.reset();
     }
   }
@@ -1956,11 +2043,68 @@ class StudyParticle {
   }
 }
 
+class CadPulse {
+  constructor() {
+    this.reset();
+  }
+  reset() {
+    this.isHoriz = Math.random() > 0.5;
+    const step = 60;
+    if (this.isHoriz) {
+      this.y = Math.floor(Math.random() * (canvas.height / step)) * step;
+      this.x = 0;
+      this.speed = Math.random() * 2 + 1.5;
+      this.length = Math.random() * 60 + 40;
+    } else {
+      this.x = Math.floor(Math.random() * (canvas.width / step)) * step;
+      this.y = 0;
+      this.speed = Math.random() * 2 + 1.5;
+      this.length = Math.random() * 60 + 40;
+    }
+  }
+  update() {
+    if (this.isHoriz) {
+      this.x += this.speed;
+      if (this.x > canvas.width + 100) this.reset();
+    } else {
+      this.y += this.speed;
+      if (this.y > canvas.height + 100) this.reset();
+    }
+  }
+  draw() {
+    ctx.beginPath();
+    if (this.isHoriz) {
+      const grad = ctx.createLinearGradient(this.x - this.length, this.y, this.x, this.y);
+      grad.addColorStop(0, 'rgba(0, 229, 255, 0)');
+      grad.addColorStop(1, 'rgba(0, 229, 255, 0.45)');
+      ctx.strokeStyle = grad;
+      ctx.lineWidth = 1.5;
+      ctx.moveTo(this.x - this.length, this.y);
+      ctx.lineTo(this.x, this.y);
+    } else {
+      const grad = ctx.createLinearGradient(this.x, this.y - this.length, this.x, this.y);
+      grad.addColorStop(0, 'rgba(0, 229, 255, 0)');
+      grad.addColorStop(1, 'rgba(0, 229, 255, 0.45)');
+      ctx.strokeStyle = grad;
+      ctx.lineWidth = 1.5;
+      ctx.moveTo(this.x, this.y - this.length);
+      ctx.lineTo(this.x, this.y);
+    }
+    ctx.stroke();
+  }
+}
+
 function reinitParticlesForTheme() {
   particles = [];
-  const count = activeStudyTheme === 'blueprint-cad' ? 40 : 48;
+  cadPulses = [];
+  const count = activeStudyTheme === 'blueprint-cad' ? 44 : 52;
   for (let i = 0; i < count; i++) {
     particles.push(new StudyParticle());
+  }
+  if (activeStudyTheme === 'blueprint-cad') {
+    for (let i = 0; i < 6; i++) {
+      cadPulses.push(new CadPulse());
+    }
   }
 }
 reinitParticlesForTheme();
@@ -1968,9 +2112,9 @@ reinitParticlesForTheme();
 function animateBackground() {
   ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-  // In blueprint CAD mode, draw subtle drafting grid lines
+  // In blueprint CAD mode, draw technical coordinate grid & circuit pulses
   if (activeStudyTheme === 'blueprint-cad') {
-    ctx.strokeStyle = 'rgba(0, 210, 255, 0.04)';
+    ctx.strokeStyle = 'rgba(0, 210, 255, 0.05)';
     ctx.lineWidth = 1;
     const step = 60;
     for (let x = 0; x < canvas.width; x += step) {
@@ -1985,12 +2129,62 @@ function animateBackground() {
       ctx.lineTo(canvas.width, y);
       ctx.stroke();
     }
+    cadPulses.forEach(pulse => {
+      pulse.update();
+      pulse.draw();
+    });
   }
 
+  // Constellation network links between nearby particles
+  const maxDist = 110;
+  for (let i = 0; i < particles.length; i++) {
+    for (let j = i + 1; j < particles.length; j++) {
+      const p1 = particles[i];
+      const p2 = particles[j];
+      const dx = p1.x - p2.x;
+      const dy = p1.y - p2.y;
+      const dist = Math.sqrt(dx * dx + dy * dy);
+      if (dist < maxDist) {
+        const linkAlpha = (1 - dist / maxDist) * 0.12;
+        ctx.strokeStyle = activeStudyTheme === 'blueprint-cad' ? `rgba(0, 229, 255, ${linkAlpha})` :
+                          activeStudyTheme === 'study-academy' ? `rgba(245, 158, 11, ${linkAlpha})` :
+                          activeStudyTheme === 'cozy-library' ? `rgba(251, 211, 141, ${linkAlpha})` :
+                          `rgba(168, 85, 247, ${linkAlpha})`;
+        ctx.lineWidth = 0.75;
+        ctx.beginPath();
+        ctx.moveTo(p1.x, p1.y);
+        ctx.lineTo(p2.x, p2.y);
+        ctx.stroke();
+      }
+    }
+  }
+
+  // Laser filament links to mouse cursor
+  if (mouse.active) {
+    particles.forEach(p => {
+      const dx = mouse.x - p.x;
+      const dy = mouse.y - p.y;
+      const dist = Math.sqrt(dx * dx + dy * dy);
+      if (dist < 150) {
+        const laserAlpha = (1 - dist / 150) * 0.25;
+        ctx.strokeStyle = activeStudyTheme === 'blueprint-cad' ? `rgba(0, 255, 234, ${laserAlpha})` :
+                          activeStudyTheme === 'study-academy' ? `rgba(251, 191, 36, ${laserAlpha})` :
+                          `rgba(6, 182, 212, ${laserAlpha})`;
+        ctx.lineWidth = 0.9;
+        ctx.beginPath();
+        ctx.moveTo(p.x, p.y);
+        ctx.lineTo(mouse.x, mouse.y);
+        ctx.stroke();
+      }
+    });
+  }
+
+  // Update & draw particles
   particles.forEach(p => {
     p.update();
     p.draw();
   });
+
   requestAnimationFrame(animateBackground);
 }
 animateBackground();
