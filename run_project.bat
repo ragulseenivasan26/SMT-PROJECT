@@ -1,5 +1,5 @@
 @echo off
-title AI Vernacular Pedagogy - SMT CO2
+title AI Vernacular Pedagogy
 echo ========================================================
 echo   AI-Powered Vernacular Pedagogy and Translation Tool
 echo   Starting Backend & Frontend Server...

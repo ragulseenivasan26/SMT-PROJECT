@@ -1,6 +1,7 @@
 import logging
 import time
 import re
+from typing import Optional, List, Dict, Any
 from concurrent.futures import ThreadPoolExecutor
 
 try:
@@ -220,8 +221,32 @@ def is_valid_translation(text):
         return False
     return True
 
+def gemini_translate(text: str, source: str, target: str, api_key: str) -> Optional[str]:
+    """Translates educational text using Google Gemini API when an API key is provided."""
+    try:
+        import requests
+        prompt = (
+            f"You are an expert multilingual educational translator. Translate this academic/pedagogical text from {source} into {target}. "
+            f"Provide only the direct natural {target} translation without extra commentary, markdown, or quotation marks.\n\n"
+            f"Text: {text}"
+        )
+        url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={api_key}"
+        res = requests.post(url, json={"contents": [{"parts": [{"text": prompt}]}]}, timeout=6)
+        if res.status_code == 200:
+            data = res.json()
+            candidates = data.get("candidates", [])
+            if candidates:
+                ans = candidates[0].get("content", {}).get("parts", [])[0].get("text", "").strip()
+                if ans and is_valid_translation(ans):
+                    return ans
+        else:
+            logging.warning(f"Gemini API returned status code {res.status_code}: {res.text[:120]}")
+    except Exception as e:
+        logging.warning(f"Gemini API translation error: {e}")
+    return None
+
 def translate_text(text, source="English", target="Tamil"):
-    """Translates educational content or questions with resilient multi-tier fallbacks and offline support."""
+    """Translates educational content or questions with resilient multi-tier fallbacks, online Gemini API, and offline support."""
     cleaned_text = str(text or "").strip()
     if not cleaned_text:
         return ""
@@ -232,7 +257,17 @@ def translate_text(text, source="English", target="Tamil"):
     if src_code == tgt_code:
         return cleaned_text
 
-    # 1. Check local SQLite persistent database cache
+    # Check network mode from database
+    network_mode = "auto"
+    gemini_key = ""
+    try:
+        from database import get_setting
+        network_mode = get_setting("network_mode", "auto")
+        gemini_key = get_setting("gemini_api_key", "").strip()
+    except Exception:
+        pass
+
+    # 1. Check local SQLite persistent database cache (Available in all modes)
     try:
         from database import find_cached_translation
         cached = find_cached_translation(cleaned_text, source_lang=source, target_lang=target)
@@ -246,7 +281,17 @@ def translate_text(text, source="English", target="Tamil"):
         if cleaned_text in DEMO_TRANSLATIONS[tgt_code]:
             return DEMO_TRANSLATIONS[tgt_code][cleaned_text]
 
-    # 3. Attempt 1: GoogleTranslator direct (Online)
+    # IF OFFLINE MODE: Skip all network requests immediately for zero latency
+    if network_mode == "offline":
+        return offline_translate(cleaned_text, src_code=src_code, tgt_code=tgt_code)
+
+    # 3. If Gemini API key is configured and online, attempt Gemini AI first
+    if gemini_key:
+        gemini_res = gemini_translate(cleaned_text, source, target, gemini_key)
+        if gemini_res:
+            return gemini_res
+
+    # 4. Attempt GoogleTranslator direct (Online)
     if GoogleTranslator:
         for attempt in range(2):
             try:

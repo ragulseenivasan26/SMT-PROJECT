@@ -22,11 +22,9 @@ from models.translator import (
 from models.cinema_studio import get_cinema_scenes, translate_scene, generate_srt_file
 from models.report_generator import generate_report_data, generate_markdown_report
 from models.chatbot import generate_chat_response
-from models.engineering_symbols import (
-    get_all_engineering_symbols,
-    analyze_uploaded_symbol_or_query,
-    calculate_engineering_formula
-)
+from models.government_schemes import get_all_schemes, check_student_eligibility
+from models.video_translator import process_video_translation, EDUCATIONAL_VIDEO_PRESETS
+from models.live_vision import analyze_camera_frame
 
 # Backward compatibility with engine if needed
 try:
@@ -37,9 +35,9 @@ except ImportError:
     vocabulary = None
 
 app = FastAPI(
-    title="Vernacular AI Platform",
-    description="Multimodal Vernacular Education, Real-Time Translation & Cinema Dubbing Platform",
-    version="2.0.0"
+    title="AI Vernacular Pedagogy",
+    description="AI-Powered Vernacular Pedagogy & Real-Time Translation Platform",
+    version="3.0.0"
 )
 
 app.add_middleware(
@@ -96,14 +94,21 @@ class ExplainReq(BaseModel):
     language: Optional[str] = "Tamil"
     grade: Optional[int] = 3
 
-class AnalyzeSymbolReq(BaseModel):
-    query: Optional[str] = ""
-    image_data: Optional[str] = None
-    target_language: Optional[str] = "Tamil"
+class SchemesEligibilityReq(BaseModel):
+    grade: str = "9"
+    gender: Optional[str] = "All"
+    school_type: Optional[str] = "Government"
+    family_income: Optional[float] = None
 
-class CalculateFormulaReq(BaseModel):
-    formula_type: str
-    params: dict
+class VideoTranslateReq(BaseModel):
+    video_input: Optional[str] = "solar_system"
+    target_language: Optional[str] = "Tamil"
+    custom_script: Optional[str] = None
+
+class LiveVisionReq(BaseModel):
+    detected_text: Optional[str] = ""
+    mode: Optional[str] = "book_scanner"
+    target_language: Optional[str] = "Tamil"
 
 # --- Routes ---
 @app.get("/")
@@ -117,7 +122,7 @@ def home():
 def health():
     return {
         "status": "ok",
-        "service": "Vernacular AI Platform",
+        "service": "Vernacular AI Student Platform",
         "languages_count": len(SUPPORTED_LANGUAGES),
         "database": database.get_db_info()
     }
@@ -216,6 +221,64 @@ def api_chat(req: ChatReq):
     result = generate_chat_response(message, history=history, target_language=target_language)
     return result
 
+# --- Government Schemes Endpoints ---
+@app.get("/api/schemes")
+def api_get_schemes(state: Optional[str] = None, grade: Optional[str] = None, gender: Optional[str] = None):
+    schemes = get_all_schemes(state=state, grade=grade, gender=gender)
+    return {
+        "total": len(schemes),
+        "schemes": schemes
+    }
+
+@app.post("/api/schemes/check_eligibility")
+def api_check_schemes_eligibility(req: SchemesEligibilityReq):
+    result = check_student_eligibility(
+        grade=req.grade,
+        gender=req.gender or "All",
+        school_type=req.school_type or "Government",
+        family_income=req.family_income
+    )
+    return result
+
+# --- Video Translation & Subtitles Endpoints ---
+@app.get("/api/video/presets")
+def api_video_presets():
+    return {
+        "presets": EDUCATIONAL_VIDEO_PRESETS
+    }
+
+@app.post("/api/video/translate")
+def api_video_translate(req: VideoTranslateReq):
+    result = process_video_translation(
+        video_input=req.video_input or "solar_system",
+        target_language=req.target_language or "Tamil",
+        custom_script=req.custom_script
+    )
+    return result
+
+@app.post("/api/video/export_srt")
+async def api_video_export_srt(request: Request):
+    data = await request.json()
+    srt_content = data.get("srt_content", "")
+    target_lang = data.get("target_language", "vernacular")
+    filename = f"education_subtitles_{target_lang}.srt"
+    return Response(
+        content=srt_content,
+        media_type="text/plain; charset=utf-8",
+        headers={"Content-Disposition": f"attachment; filename={filename}"}
+    )
+
+# --- Live Camera & Vision Endpoint ---
+@app.post("/api/vision/analyze")
+def api_vision_analyze(req: LiveVisionReq):
+    result = analyze_camera_frame(
+        detected_text=req.detected_text or "",
+        mode=req.mode or "book_scanner",
+        target_language=req.target_language or "Tamil"
+    )
+    return result
+
+# --- Cinema Studio Endpoints ---
 @app.get("/api/cinema/scenes")
 def api_cinema_scenes():
     return {"scenes": get_cinema_scenes()}
@@ -240,6 +303,7 @@ async def api_cinema_export_srt(request: Request):
         headers={"Content-Disposition": f"attachment; filename={filename}"}
     )
 
+# --- Project Academic Report Endpoints ---
 @app.get("/api/project/report")
 def api_project_report():
     return generate_report_data()
@@ -253,6 +317,7 @@ def api_project_report_download():
         headers={"Content-Disposition": "attachment; filename=Vernacular_AI_Project_Report.md"}
     )
 
+# --- History & Database Endpoints ---
 @app.get("/api/history")
 def api_get_history(limit: int = 50):
     items = database.get_history(limit=limit)
@@ -277,6 +342,57 @@ def api_toggle_favorite(item_id: int):
 def api_database_info():
     return database.get_db_info()
 
+class SqlQueryReq(BaseModel):
+    sql_query: str
+
+@app.post("/api/database/query")
+def api_database_query(req: SqlQueryReq):
+    """Executes a custom SELECT SQL query via SQLite cursor."""
+    return database.run_custom_query(req.sql_query)
+
+class SettingsReq(BaseModel):
+    network_mode: Optional[str] = "auto"
+    gemini_api_key: Optional[str] = None
+    translator_provider: Optional[str] = "auto"
+
+@app.get("/api/settings")
+def api_get_settings():
+    return database.get_all_settings()
+
+@app.post("/api/settings")
+def api_update_settings(req: SettingsReq):
+    if req.network_mode:
+        database.set_setting("network_mode", req.network_mode.lower())
+    if req.gemini_api_key is not None:
+        database.set_setting("gemini_api_key", req.gemini_api_key.strip())
+    if req.translator_provider:
+        database.set_setting("translator_provider", req.translator_provider.lower())
+    return {
+        "success": True,
+        "message": "Settings updated successfully.",
+        "settings": database.get_all_settings()
+    }
+
+@app.post("/api/settings/test_key")
+def api_test_key(req: SettingsReq):
+    key = req.gemini_api_key or database.get_setting("gemini_api_key", "")
+    if not key:
+        raise HTTPException(status_code=400, detail="No API Key provided to test.")
+    try:
+        import requests
+        url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={key.strip()}"
+        res = requests.post(
+            url,
+            json={"contents": [{"parts": [{"text": "Hello, respond with: OK"}]}]},
+            timeout=7
+        )
+        if res.status_code == 200:
+            return {"valid": True, "message": "API Key is valid and active! 🟢"}
+        else:
+            return {"valid": False, "status_code": res.status_code, "message": f"API Error: {res.text[:100]}"}
+    except Exception as e:
+        return {"valid": False, "message": f"Connection error: {str(e)}"}
+
 @app.get("/api/database/export")
 def api_database_export(format: str = "json"):
     if format.lower() == "csv":
@@ -289,7 +405,22 @@ def api_database_export(format: str = "json"):
     rows = database.get_all_rows()
     return {"database_export": rows, "total": len(rows)}
 
-# --- Backward-compatible Lesson & Vocabulary endpoints ---
+# --- Universal Student Learning Package JSON Export ---
+@app.get("/api/export/all_data")
+def api_export_all_data():
+    rows = database.get_all_rows()
+    schemes = get_all_schemes()
+    return {
+        "project": "Vernacular AI Student Platform",
+        "description": "Comprehensive student pedagogical dataset, translation records, and government scholarship information",
+        "total_translations": len(rows),
+        "translation_history": rows,
+        "supported_languages": SUPPORTED_LANGUAGES,
+        "government_schemes": schemes,
+        "status": "ready"
+    }
+
+# --- Lessons & Explainers ---
 @app.post("/api/lesson")
 def api_lesson(req: LessonReq):
     if generate_lesson:
@@ -301,11 +432,11 @@ def api_lesson(req: LessonReq):
         "grade": req.grade,
         "intro": trans,
         "steps": [
-            translate_text("1. Fundamental definition", "English", req.language),
-            translate_text("2. Real world connection", "English", req.language),
-            translate_text("3. Active vernacular recall", "English", req.language)
+            translate_text("1. Fundamental concept definition", "English", req.language),
+            translate_text("2. Real world daily life example", "English", req.language),
+            translate_text("3. Active vernacular recall and question", "English", req.language)
         ],
-        "activity": translate_text("Draw a diagram and speak two sentences about it.", "English", req.language)
+        "activity": translate_text("Draw a diagram and write two key takeaways in your notebook.", "English", req.language)
     }
 
 @app.post("/api/explain")
@@ -320,28 +451,3 @@ def api_vocabulary(language: str = "Tamil"):
     if vocabulary:
         return {"language": language, "items": vocabulary(language)}
     return {"language": language, "items": []}
-
-# --- Engineering NEC Symbols & Blueprint Studio Endpoints ---
-@app.get("/api/engineering/symbols")
-def api_engineering_symbols(category: Optional[str] = None):
-    symbols = get_all_engineering_symbols(category=category)
-    return {
-        "total": len(symbols),
-        "category": category or "all",
-        "symbols": symbols
-    }
-
-@app.post("/api/engineering/analyze_symbol")
-def api_analyze_symbol(req: AnalyzeSymbolReq):
-    query = (req.query or "earth_ground").strip()
-    result = analyze_uploaded_symbol_or_query(
-        query_or_tag=query,
-        target_language=req.target_language or "Tamil"
-    )
-    return result
-
-@app.post("/api/engineering/calculate")
-def api_engineering_calculate(req: CalculateFormulaReq):
-    result = calculate_engineering_formula(req.formula_type, req.params or {})
-    return result
-
